@@ -1,0 +1,57 @@
+---
+# Proxmox API connection settings.
+# Secrets (token id/secret) live in the vault file: group_vars/proxmox/vault.yml
+proxmox_api_host: "192.0.2.10"       # Proxmox host or cluster endpoint
+proxmox_api_user: "root@pam"        # API user, e.g. automation@pve
+proxmox_api_validate_certs: false          # set true when using a trusted cert
+
+# Default Proxmox node to place VMs on (can be overridden per VM).
+proxmox_default_node: "proxmox01"
+
+# Name of the existing cloud-init enabled template to clone from.
+proxmox_default_template: "your-cloudinit-template"
+
+# Default storage for the cloned VM's disks (can be overridden per VM).
+proxmox_default_storage: "local-lvm"
+proxmox_default_bridge: "vmbr0"
+
+# Full clone (true) makes an independent copy; linked clone (false) is faster
+# but depends on the template.
+proxmox_full_clone: true
+
+# Whether VMs should be powered on after creation.
+proxmox_start_after_create: true
+
+# -----------------------------------------------------------------------------
+# Cloud-init defaults applied to every VM unless overridden per VM.
+# -----------------------------------------------------------------------------
+proxmox_ci_user: "youruser"   # default cloud-init user to create in the VM
+# Public SSH key(s) injected into the VM via cloud-init.
+proxmox_ci_sshkeys: "ssh-ed25519 AAAA...replace-with-your-public-key... user@host"
+# Network config: "dhcp" or a static CIDR like "10.0.0.50/24".
+proxmox_ci_nameserver: "192.0.2.5"
+proxmox_ci_searchdomain: "example.com"
+
+# -----------------------------------------------------------------------------
+# VMs to provision. Each entry clones the template into a new VM and configures
+# it with cloud-init. Only "name" is required; the rest fall back to defaults.
+# -----------------------------------------------------------------------------
+proxmox_vms:
+  - name: "app-01"
+    vmid: 201                 # optional: omit to let Proxmox auto-assign
+    cores: 2
+    memory: 2048              # in MB
+    disk_size: "+10G"         # optional disk resize after clone (e.g. +20G)
+    ipconfig: "ip=192.0.2.50/24,gw=192.0.2.1"       # or "ip=10.0.0.51/24,gw=10.0.0.1"
+    # node: "pve2"            # optional overrides
+    # template: "another-template"
+    # storage: "local-zfs"
+    # bridge: "vmbr1"
+    # vlan: 10
+
+  - name: "app-02"
+    vmid: 202
+    cores: 2
+    memory: 2048
+    disk_size: "+10G"
+    ipconfig: "ip=192.0.2.51/24,gw=192.0.2.1"

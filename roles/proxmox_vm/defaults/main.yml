@@ -1,0 +1,8 @@
+---
+# Per-VM defaults applied to each item in `proxmox_vms` that does not
+# define the value itself.
+vm_default_cores: 2
+vm_default_sockets: 1
+vm_default_memory: 2048        # MB
+vm_default_agent: true         # enable QEMU guest agent
+vm_default_onboot: false

@@ -1,0 +1,5 @@
+# Python libraries required on the Ansible controller by the
+# community.general.proxmox_* modules.
+# Install with: pip install -r requirements.txt
+proxmoxer>=2.0.0
+requests>=2.25.0

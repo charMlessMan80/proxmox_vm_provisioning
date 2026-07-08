@@ -1,0 +1,12 @@
+---
+# Copy this file to vault.yml and fill in your real secrets, then encrypt it:
+#   cp group_vars/proxmox/vault.yml.example group_vars/proxmox/vault.yml
+#   ansible-vault encrypt group_vars/proxmox/vault.yml
+#
+# Create an API token in the Proxmox UI:
+#   Datacenter > Permissions > API Tokens
+#
+# vault_proxmox_api_token_id is the token name only (e.g. "ansible"),
+# NOT the full "user@realm!token" string.
+vault_proxmox_api_token_id: "ansible"
+vault_proxmox_api_token_secret: "00000000-0000-0000-0000-000000000000"

@@ -1,0 +1,12 @@
+---
+- name: Provision VMs on Proxmox
+  hosts: proxmox
+  gather_facts: false
+  tasks:
+    - name: Provision each VM defined in proxmox_vms
+      ansible.builtin.include_role:
+        name: proxmox_vm
+      loop: "{{ proxmox_vms }}"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.name }}"

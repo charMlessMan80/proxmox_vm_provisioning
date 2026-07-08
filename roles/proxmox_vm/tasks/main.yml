@@ -1,0 +1,78 @@
+---
+- name: Clone template into VM "{{ vm.name }}"
+  community.general.proxmox_kvm:
+    # --- API connection (token auth) ---
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ vault_proxmox_api_token_id }}"
+    api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+    validate_certs: "{{ proxmox_api_validate_certs }}"
+
+    # --- Clone source / target ---
+    node: "{{ vm.node | default(proxmox_default_node) }}"
+    clone: "{{ vm.template | default(proxmox_default_template) }}"
+    name: "{{ vm.name }}"
+    newid: "{{ vm.vmid | default(omit) }}"
+    storage: "{{ vm.storage | default(proxmox_default_storage) }}"
+    full: "{{ vm.full_clone | default(proxmox_full_clone) }}"
+    timeout: 300
+    state: present
+  register: vm_clone
+
+- name: Configure VM "{{ vm.name }}" (compute + cloud-init)
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ vault_proxmox_api_token_id }}"
+    api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+    validate_certs: "{{ proxmox_api_validate_certs }}"
+    node: "{{ vm.node | default(proxmox_default_node) }}"
+    name: "{{ vm.name }}"
+
+    # --- Compute ---
+    cores: "{{ vm.cores | default(vm_default_cores) }}"
+    sockets: "{{ vm.sockets | default(vm_default_sockets) }}"
+    memory: "{{ vm.memory | default(vm_default_memory) }}"
+    agent: "{{ vm.agent | default(vm_default_agent) }}"
+    onboot: "{{ vm.onboot | default(vm_default_onboot) }}"
+
+    # --- Networking ---
+    net:
+      net0: >-
+        virtio,bridge={{ vm.bridge | default(proxmox_default_bridge) }}{{ ',tag=' ~ vm.vlan if vm.vlan is defined else '' }}
+
+    # --- Cloud-init configuration ---
+    ciuser: "{{ vm.ci_user | default(proxmox_ci_user) }}"
+    sshkeys: "{{ vm.ci_sshkeys | default(proxmox_ci_sshkeys) }}"
+    nameservers: "{{ vm.ci_nameserver | default(proxmox_ci_nameserver) }}"
+    searchdomains: "{{ vm.ci_searchdomain | default(proxmox_ci_searchdomain) }}"
+    ipconfig:
+      ipconfig0: "{{ vm.ipconfig | default('ip=dhcp') }}"
+
+    update: true
+    state: present
+
+- name: Resize disk for VM "{{ vm.name }}"
+  community.general.proxmox_disk:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ vault_proxmox_api_token_id }}"
+    api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+    validate_certs: "{{ proxmox_api_validate_certs }}"
+    name: "{{ vm.name }}"
+    disk: "scsi0"
+    size: "{{ vm.disk_size }}"
+    state: resized
+  when: vm.disk_size is defined
+
+- name: Start VM "{{ vm.name }}"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_token_id: "{{ vault_proxmox_api_token_id }}"
+    api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+    validate_certs: "{{ proxmox_api_validate_certs }}"
+    node: "{{ vm.node | default(proxmox_default_node) }}"
+    name: "{{ vm.name }}"
+    state: started
+  when: proxmox_start_after_create | bool

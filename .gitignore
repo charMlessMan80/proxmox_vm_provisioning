@@ -1,0 +1,9 @@
+*.retry
+collections/
+*.pyc
+__pycache__/
+.vault_pass
+
+# Environment-specific vars and secrets (use the .example files as templates)
+group_vars/proxmox/vars.yml
+group_vars/proxmox/vault.yml
